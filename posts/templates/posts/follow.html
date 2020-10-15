@@ -1,0 +1,20 @@
+{% extends "base.html" %} 
+{% block title %} Подписки {% endblock %}
+{% block content %}
+<div class="container"></div>
+  {% load cache %}
+  {% cache 500 index_page %}
+    {% include "includes/menu.html" with index=True %}
+    <h1> Последние обновления на сайте</h1>
+      <!-- Вывод ленты записей -->
+      {% for post in page %}
+      <!-- Вот он, новый include! -->
+        {% include "posts/post_item.html" with post=post %}
+      {% endfor %}
+      <!-- Вывод паджинатора -->
+      {% if page.has_other_pages %}
+        {% include "includes/paginator.html" with items=page paginator=paginator%}
+      {% endif %}
+  {% endcache %}
+</div>   
+{% endblock %} 
