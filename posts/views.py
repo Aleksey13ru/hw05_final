@@ -7,9 +7,9 @@ from .models import Post, Group, User, Comment, Follow
 from .forms import PostForm, CommentForm
 
 
-@cache_page(20 * 1)
+@cache_page(20 * 1, key_prefix='index_page')
 def index(request):
-    post_list = Post.objects.order_by('-pub_date').all()
+    post_list = Post.objects.select_related('group').all()
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
@@ -35,7 +35,6 @@ def group_posts(request, slug):
 def new_post(request):
     form = PostForm(request.POST or None, files=request.FILES or None)
     if form.is_valid():
-#        text = request.POST.get('text') # убрать
         post = form.save(commit=False)
         post.author = request.user
         form.save()
@@ -49,8 +48,14 @@ def profile(request, username):
     paginator = Paginator(post_records, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-
+    following = Follow.objects.filter(
+        user__username=request.user, author__username=username).all()
+    follower = Follow.objects.filter(author=author).count()
+    followed = Follow.objects.filter(user=author).count()
     return render(request, 'posts/profile.html', {'author': author,
+                                                  'following': following,
+                                                  'follower': follower,
+                                                  'followed': followed,
                                                   'page': page,
                                                   'paginator': paginator,
                                                   'post_records': post_records})
@@ -93,7 +98,7 @@ def add_comment(request, username, post_id):
             new_comment.author = request.user
             new_comment.post = post
             new_comment.save()
-            return redirect('post', username=request.user.username, post_id=post_id) # перенаправить
+            return redirect('post', username=username, post_id=post_id) # перенаправить
         return redirect('post', username=request.user.username, post_id=post_id) #
     form_comment = CommentForm()    
     return redirect('post', username=request.user.username, post_id=post_id) #   
@@ -101,7 +106,7 @@ def add_comment(request, username, post_id):
 
 @login_required
 def follow_index(request):
-    '''Функция страницы, куда будут выведены посты авторов, на которых подписан текущий пользователь'''
+    """Функция страницы, куда будут выведены посты авторов, на которых подписан текущий пользователь"""
     post_list = Post.objects.filter(author__following__user=request.user)
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
@@ -112,7 +117,7 @@ def follow_index(request):
     
 @login_required
 def profile_follow(request, username):
-    '''Функция для подписки на интересного автора'''
+    """Функция для подписки на интересного автора"""
     author = get_object_or_404(User, username=username) # author пользователь, на которого подписываются
     if request.user != author:
         Follow.objects.get_or_create(user=request.user, author=author)
@@ -121,7 +126,7 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    '''Функция для того, чтобы отписаться от надоевшего графомана'''
+    """Функция для того, чтобы отписаться от надоевшего графомана"""
     author = get_object_or_404(User, username=username) # author пользователь, на которого подписываются
     Follow.objects.filter(user=request.user, author=author).delete()
     return redirect('profile', username=username)
