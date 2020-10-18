@@ -13,7 +13,7 @@ def index(request):
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    return render(request, 'index.html', {'page': page, 
+    return render(request, 'index.html', {'page': page,
                                           'paginator': paginator})
 
 
@@ -78,7 +78,7 @@ def post_edit(request, username, post_id):
     post = get_object_or_404(Post, id=post_id, author__username=username)
     if request.user != post.author:
         return redirect('index')
-    form = PostForm(request.POST or None, 
+    form = PostForm(request.POST or None,
                     files=request.FILES or None,
                     instance=post)
     if form.is_valid():
@@ -98,23 +98,24 @@ def add_comment(request, username, post_id):
             new_comment.author = request.user
             new_comment.post = post
             new_comment.save()
-            return redirect('post', username=username, post_id=post_id) # перенаправить
-        return redirect('post', username=request.user.username, post_id=post_id) #
-    form_comment = CommentForm()    
-    return redirect('post', username=request.user.username, post_id=post_id) #   
+            return redirect('post', username=username, post_id=post_id)
+        return redirect('post', username=request.user.username, post_id=post_id)
+    form_comment = CommentForm()
+    return redirect('post', username=request.user.username, post_id=post_id)
 
 
 @login_required
 def follow_index(request):
-    """Функция страницы, куда будут выведены посты авторов, на которых подписан текущий пользователь"""
+    """Функция страницы, куда будут выведены посты авторов,
+    на которых подписан текущий пользователь"""
     post_list = Post.objects.filter(author__following__user=request.user)
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     return render(request, 'posts/follow.html', {'page': page,
-                                           'paginator': paginator})
+                                                'paginator': paginator})
 
-    
+
 @login_required
 def profile_follow(request, username):
     """Функция для подписки на интересного автора"""
@@ -122,12 +123,12 @@ def profile_follow(request, username):
     if request.user != author:
         Follow.objects.get_or_create(user=request.user, author=author)
     return redirect('profile', username=username)
-    
+
 
 @login_required
 def profile_unfollow(request, username):
     """Функция для того, чтобы отписаться от надоевшего графомана"""
-    author = get_object_or_404(User, username=username) # author пользователь, на которого подписываются
+    author = get_object_or_404(User, username=username)
     Follow.objects.filter(user=request.user, author=author).delete()
     return redirect('profile', username=username)
 
