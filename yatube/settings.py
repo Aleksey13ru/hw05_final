@@ -1,4 +1,15 @@
 import os
+import environ
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+env = environ.Env()
+environ.Env.read_env()
+
+sentry_sdk.init(
+    dsn="https://1ba57a6d9b714a0997cfec19d888dc1b@o538330.ingest.sentry.io/5656212",
+    integrations=[DjangoIntegration()],
+)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -11,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'xy*tbu)ch-f130r+owyherf2=$pge2*+0m7xx6z-(a)_i@1pkm'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 if DEBUG:
     import mimetypes
@@ -22,7 +33,10 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "[::1]",
     "testserver",
-    "*",
+    "130.193.54.174",
+    "skynet-2021.tk",
+    "www.skynet-2021.tk",
+
 ]
 
 INTERNAL_IPS = [
@@ -82,11 +96,8 @@ WSGI_APPLICATION = 'yatube.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    'default': env.db(),
     }
-}
 
 
 # Password validation
